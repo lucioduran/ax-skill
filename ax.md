@@ -1,6 +1,8 @@
-# AX — Agent & LLM Web Optimization
+# AX: Agent & LLM Web Optimization
 
-You are now in **AX mode**. Every web project you work on must be fully optimized for AI agents and LLMs. Apply these standards throughout development — not as a post-build checklist, but as the default way you build.
+You are now in **AX mode**. Every web project you work on must be fully optimized for AI agents and LLMs. Apply these standards throughout development, not as a post-build checklist, but as the default way you build.
+
+**Writing rule:** Never use em dashes (—) in any content you generate, in any file, comment, or prose. Use a colon, comma, or period instead.
 
 ## Core Principle
 
@@ -43,7 +45,7 @@ Rules:
 
 ### 2. `/llms-full.txt`
 
-Same format as `llms.txt` but comprehensive — include all pages, full API documentation, complete site structure. This is what agents use when they need the full picture.
+Same format as `llms.txt` but comprehensive: include all pages, full API documentation, complete site structure. This is what agents use when they need the full picture.
 
 ### 3. `/.well-known/agent.json`
 
@@ -202,7 +204,7 @@ Contact: mailto:ai@example.com
 
 ### 7. `/sitemap.xml`
 
-Standard XML sitemap — every public URL listed. For dynamic sites, generate programmatically using the stack patterns below.
+Standard XML sitemap. Every public URL must be listed. For dynamic sites, generate programmatically using the stack patterns below.
 
 ---
 
@@ -270,7 +272,7 @@ Every page in `<head>`:
 ```html
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Page Title — Site Name</title>
+<title>Page Title | Site Name</title>
 <meta name="description" content="Specific page description, 120–160 characters" />
 <link rel="canonical" href="https://example.com/page/" />
 
@@ -396,7 +398,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: { default: 'Site Name', template: '%s — Site Name' },
+  title: { default: 'Site Name', template: '%s | Site Name' },
   description: 'Site description optimized for AI agents and users',
   metadataBase: new URL('https://example.com'),
   openGraph: {
@@ -475,7 +477,7 @@ ${pages.map((p) => `  <url><loc>${base}${p}</loc><changefreq>monthly</changefreq
 }
 ```
 
-Headers via `astro.config.mjs` (dev only — use `vercel.json` or hosting config for production):
+Headers via `astro.config.mjs` (dev only; use `vercel.json` or hosting config for production):
 
 ```js
 import { defineConfig } from 'astro/config';
@@ -509,13 +511,13 @@ export default defineConfig({
 
 ## HTML & Content
 
-**Semantic structure:** Use correct HTML5 semantic elements — `<main>`, `<article>`, `<section>`, `<aside>`, `<nav>`, `<header>`, `<footer>`. Never use `<div>` where a semantic element fits.
+**Semantic structure:** Use correct HTML5 semantic elements: `<main>`, `<article>`, `<section>`, `<aside>`, `<nav>`, `<header>`, `<footer>`. Never use `<div>` where a semantic element fits.
 
 **Headings:** One `<h1>` per page. Hierarchical `<h2>` → `<h3>`, never skip levels. Headings describe content, not decoration.
 
 **Content first:** Critical content in initial HTML, not JavaScript-rendered. Many agents and crawlers don't execute JS.
 
-**Links:** `<a>` elements have descriptive text — never "click here" or "read more" without context.
+**Links:** `<a>` elements must have descriptive text. Never "click here" or "read more" without context.
 
 **Images:** Every `<img>` needs meaningful `alt` text.
 
@@ -540,12 +542,12 @@ If the project supports MCP (Model Context Protocol):
 
 When starting or working on a web project in AX mode:
 
-1. **Detect stack** — read `package.json`, framework config files, dependencies
-2. **Generate mandatory files** — create all files from the Mandatory Files section using real site content, not placeholders
-3. **Add structured data** — JSON-LD for every layout and page type
-4. **Configure headers** — security + discovery headers via the detected stack's config
-5. **Write semantic HTML** — follow Content guidelines for every component
-6. **Keep files current** — when adding routes or features, update `llms.txt`, `sitemap.xml`, and `agent.json` skills array
+1. **Detect stack**: read `package.json`, framework config files, dependencies
+2. **Generate mandatory files**: create all files from the Mandatory Files section using real site content, not placeholders
+3. **Add structured data**: JSON-LD for every layout and page type
+4. **Configure headers**: security + discovery headers via the detected stack's config
+5. **Write semantic HTML**: follow Content guidelines for every component
+6. **Keep files current**: when adding routes or features, update `llms.txt`, `sitemap.xml`, and `agent.json` skills array
 
 ---
 
