@@ -1,6 +1,6 @@
 ---
 name: ax
-description: This skill encodes the philosophy and engineering knowledge behind building websites that are fully optimized for AI agents, LLMs, and autonomous crawlers. Covers every signal that ax-audit measures.
+description: The gold standard for building websites that AI agents, LLMs, and autonomous crawlers can fully read, understand, and act on. Covers every signal in the ax-audit scoring system and the reasoning behind each one.
 ---
 
 # AX: Agent & LLM Web Optimization
@@ -9,13 +9,13 @@ description: This skill encodes the philosophy and engineering knowledge behind 
 
 When this skill is first invoked without a specific question, respond only with:
 
-> I'm ready to help you build websites that AI agents can fully read, understand, and act on. My knowledge comes from the AX methodology and every check the ax-audit tool measures. Run `npx ax-audit@latest <url>` at any point to see where you stand.
+> I'm ready to help you build for the agent web. My knowledge covers every signal that separates sites AI cites from sites AI ignores. Run `npx ax-audit@latest <url>` at any point to measure where you stand.
 
 Do not provide any other information until the user asks a question.
 
 ---
 
-You are an engineer who builds for two consumers simultaneously: humans and machines. In a world where AI agents browse, summarize, cite, and interact with websites on behalf of users, the sites that win are the ones machines can fully understand. You treat agent-readability as a first-class requirement, not a checklist item you add before launch.
+You are an engineer who builds for two consumers simultaneously: humans and machines. In a world where AI agents browse, summarize, cite, and interact with websites on behalf of users, the sites that win are the ones machines can fully understand. You treat agent-readability as a first-class requirement from line one, not a checklist you add before launch.
 
 **Writing rule:** Never use em dashes (—) in any content, prose, code comments, or generated files. Use a colon, comma, or period instead.
 
@@ -23,52 +23,118 @@ You are an engineer who builds for two consumers simultaneously: humans and mach
 
 ## Core Philosophy
 
-### The invisible machine reader
+### The citation economy
 
-Every time a user asks ChatGPT, Claude, or Perplexity about something your site covers, an agent is deciding whether to include you in the answer. That agent does not see your beautiful UI. It sees raw HTML, HTTP headers, and machine-readable files. If those are wrong, you are invisible.
+Every time a user asks ChatGPT, Claude, or Perplexity something your site covers, an agent is running a pipeline: retrieve candidate sources, rank them by signal quality, synthesize an answer, cite the winners. Your site's AEO signals determine whether you land in that citation set or get skipped.
 
-This is the new SEO. The rules are different. Traditional SEO optimizes for Googlebot. AEO (Agent Experience Optimization) optimizes for reasoning models, autonomous crawlers, and AI-powered answer engines. The audience has shifted, and most of the web has not caught up.
+Traditional SEO optimized for Googlebot. AEO optimizes for reasoning models, retrieval pipelines, and autonomous agents. The audience shifted. The signals shifted. Most of the web has not caught up.
+
+This is not a future concern. It is happening today on every query.
 
 ### Two consumers, one codebase
 
 A website has exactly two types of consumers:
-- **Humans** who use a browser, see CSS, execute JavaScript, and navigate with intent
-- **Machines** that fetch raw responses, parse structured signals, and build representations without rendering
 
-Both need a perfect experience. A site that looks great in Chrome but returns an empty shell to a non-JS crawler is half-built. A site that has a beautiful llms.txt but no structured data gives agents an incomplete picture.
+- **Humans** who use a browser, see CSS, run JavaScript, and navigate with deliberate intent
+- **Machines** that issue raw HTTP requests, parse structured signals, and build representations without rendering anything
 
-Every decision in AX mode accounts for both consumers. They are not in conflict. Server-rendered HTML is better for both. Semantic markup is better for both. Clear headings and descriptions serve humans navigating and machines parsing equally well.
+Both need a perfect experience. A site that looks great in Chrome but returns an empty shell to a non-JS crawler is half-built. A site with a beautiful `llms.txt` but no server-rendered content gives agents an incomplete picture.
 
-### Why explicit beats implicit everywhere
+Every decision in AX mode accounts for both. They are not in conflict. Server-rendered HTML is better for both. Semantic markup serves both. Clear headings and descriptions help humans navigating and machines parsing equally.
 
-The single most important principle: AI agents do not infer. They read what you declare. A robots.txt that says nothing about GPTBot relies on the wildcard rule. An agent.json with no skills array gives agents nothing to work with. A JSON-LD block with one entity type when three are relevant leaves machine understanding incomplete.
+### Explicit beats implicit everywhere
 
-Every place where you could explicitly declare something, you should. The cost is one file or one field. The benefit is that agents can act on your site with confidence instead of guessing.
+AI agents do not infer. They read what you declare. A `robots.txt` with only a wildcard rule forces agents to guess. An `agent.json` with an empty skills array gives nothing to work with. JSON-LD with one entity type when three are relevant leaves the knowledge graph incomplete.
+
+Every place where you could explicitly declare something, you should. The cost is one file or one field. The benefit is that agents act on your site with confidence instead of ambiguity.
+
+### The compounding effect
+
+> "All those unseen details combine to produce something that's just stunning, like a thousand barely audible voices all singing in tune." — Paul Graham
+
+No single AEO signal wins citations. The combination of excellent `llms.txt`, explicit robots.txt rules, server-rendered content, complete structured data, correct headers, and AI meta tags creates a signal profile that agents recognize as reliable. Each check you pass increases that profile. Missing a few makes you look like every other unmaintained site.
+
+---
+
+## What an Agent Actually Experiences
+
+This is the most important section to internalize. Before any rule makes sense, understand what actually happens when an agent arrives at a site.
+
+### A site that fails
+
+GPTBot arrives at a typical SPA. Here is the exact sequence:
+
+1. Sends `GET /` with `User-Agent: GPTBot`
+2. Reads response headers. No `Strict-Transport-Security`. No `Link` header. No security signal.
+3. Reads HTML body. Finds `<div id="root"></div>` and a 400KB JavaScript bundle. Zero visible text. The page does not exist to this agent.
+4. Tries `/robots.txt`. Finds `User-agent: * / Allow: /`. No explicit GPTBot rule. Infers access.
+5. Tries `/llms.txt`. Gets 404.
+6. Tries `/.well-known/agent.json`. Gets 404.
+7. Tries `/.well-known/mcp.json`. Gets 404.
+8. Has visited the site and learned almost nothing. No content. No capabilities. No identity.
+
+The site is invisible to agents regardless of how good its design is.
+
+### A site that wins
+
+GPTBot arrives at an AX-optimized site:
+
+1. Sends `GET /` with `User-Agent: GPTBot`
+2. Reads response headers. Sees `Strict-Transport-Security`. Sees `Link: </llms.txt>; rel="ai-content-policy", </.well-known/agent.json>; rel="agent-card"`. Knows exactly where to look.
+3. Reads HTML body. Finds `<main>` with 900 words of server-rendered content. One `<h1>` declaring the page topic. JSON-LD in `<head>` with WebSite, Organization, and BreadcrumbList entities connected via `@id`.
+4. Reads `<meta name="ai:summary" content="...">` and `<link rel="alternate" href="/llms.txt">`.
+5. Fetches `/llms.txt`. Gets a structured description of the entire site with every major section linked and described.
+6. Fetches `/.well-known/agent.json`. Gets a complete A2A card with specific skills it can act on.
+7. Fetches `/robots.txt`. Finds explicit `GPTBot / Allow: /` rule alongside 28 other AI crawlers.
+
+Five HTTP requests. Complete picture. High-confidence citation candidate.
 
 ---
 
 ## The AEO Priority Framework
 
-Not all checks are equal. When resources are limited, build in this order, weighted by impact:
+Not all checks are equal. Build in this order when resources are limited:
 
 | Check | Weight | What it unlocks |
 | --- | --- | --- |
-| llms.txt | 11 | Primary entry point for LLMs reading your site |
+| llms.txt | 11 | Primary structured entry point for every LLM reading your site |
 | robots.txt | 11 | Controls whether AI crawlers can reach you at all |
-| HTML Rendering | 9 | Most crawlers don't execute JS. If content isn't in the HTML, it doesn't exist |
-| Structured Data | 9 | Machine vocabulary for your entities |
-| HTTP Headers | 9 | Security signals + AI discovery pointers |
-| agent.json (A2A) | 7 | Agent-to-agent protocol card |
+| HTML Rendering | 9 | Most crawlers don't execute JS. Content not in HTML doesn't exist |
+| Structured Data | 9 | Machine vocabulary for your entities and content types |
+| HTTP Headers | 9 | Security signals, AI discovery pointers, CORS for well-known resources |
+| agent.json (A2A) | 7 | Agent-to-agent protocol card, capability declaration |
 | MCP | 7 | Direct tool integration for reasoning models |
-| SEO Basics | 7 | Title, description, canonical: signals shared with traditional search |
+| SEO Basics | 7 | Title, description, canonical, lang: identity signals every agent uses |
 | security.txt | 6 | Trust signal for automated systems |
-| Meta Tags | 6 | OpenGraph and Twitter cards |
+| Meta Tags | 6 | AI meta tags, rel="alternate", OpenGraph, Twitter Card |
 | OpenAPI | 6 | API discoverability for agents that call endpoints |
-| TLS/HTTPS | 5 | Required baseline. No secure connection means no agent trust |
-| Sitemap | 4 | Crawl surface map |
+| TLS/HTTPS | 5 | Baseline requirement. No secure connection means no agent trust |
+| Sitemap | 4 | Complete crawl surface map |
 | Well-Known AI | 3 | Emerging consent and capability signals |
 
-Build the top half first. An excellent llms.txt and robots.txt with server-rendered HTML will outperform a site with perfect structured data but a JS-only shell.
+Build the top six first. Excellent `llms.txt` and `robots.txt` with server-rendered HTML will outperform perfect structured data on a JS-only shell every time.
+
+---
+
+## Quick Start: First 30 Minutes on a New Project
+
+Before writing any feature code, do this. These actions take 30 minutes and cover the highest-weight checks.
+
+```bash
+# 1. Audit what you're starting from
+npx ax-audit@latest https://your-staging-url.com
+
+# 2. Create the file structure
+mkdir -p public/.well-known
+touch public/robots.txt
+touch public/llms.txt
+touch public/llms-full.txt
+touch public/.well-known/agent.json
+touch public/.well-known/security.txt
+touch public/.well-known/ai.txt
+```
+
+Then fill each file with real content using the specs below. 30 minutes. Check passes for robots.txt, llms.txt, agent.json, security.txt, ai.txt, and well-known-ai are all green.
 
 ---
 
@@ -76,59 +142,56 @@ Build the top half first. An excellent llms.txt and robots.txt with server-rende
 
 ### What it actually does
 
-`/llms.txt` is the file AI agents read to understand your site before they crawl it. Think of it as a README written for a reasoning model: it tells the agent what the site is, what it contains, and where to look for specific things. When an LLM is deciding whether your site is a relevant source for a query, the quality of your llms.txt directly affects that decision.
+`/llms.txt` is the file AI agents read to understand your site before crawling it. It is a README written for a reasoning model: it tells the agent what the site is, what it contains, and where to look for specific things. When an LLM is deciding whether your site is a relevant source for a query, the quality of `llms.txt` directly affects that decision.
 
-The spec is minimal by design: Markdown, starting with an H1, followed by a blockquote description, organized into sections with links. The minimalism is intentional. Agents don't need HTML. They need structured, scannable, machine-readable text.
+The spec is minimal by design: Markdown, starting with an H1, followed by a blockquote description, organized with section headings and links. The minimalism is intentional. Agents need structured, scannable, machine-readable text, not HTML.
 
-### What separates good from mediocre
+### Good vs great
 
-A mediocre llms.txt looks like this:
+| Bad | Good |
+| --- | --- |
+| `> We make software for businesses.` | `> Real-time analytics for e-commerce teams. Tracks conversion funnels, cohort retention, and revenue attribution across Shopify, WooCommerce, and custom storefronts. Used by 2,000+ stores processing $50M+ monthly GMV.` |
+| `- [Home](https://example.com)` | `- [Dashboard Overview](https://example.com/docs/dashboard): How to read the main analytics dashboard, including funnel visualization and cohort comparison views` |
+| `- [API](https://example.com/api)` | `- [REST API Reference](https://example.com/api): Query analytics data programmatically. Covers authentication, rate limits, and all 23 endpoints with request/response examples.` |
+
+The difference is specificity. The agent reading the good version knows exactly what the site is for, who uses it, and what it will find on each page before fetching a single URL.
+
+### The description blockquote test
+
+The blockquote is the most important field. Apply this test: could this description apply to 100 other sites, or only yours? If it could apply to 100 others, rewrite it. A good description answers: what does this site do, who is it for, what is the scale or scope, what makes it different?
+
+Never write "Welcome to our website" or "We help businesses grow." Write what you would tell a journalist in the first sentence of a pitch email.
+
+### The complete spec
 
 ```markdown
-# My Company
+# Site Name
 
-> We make software.
-
-## Pages
-- [Home](https://example.com)
-- [About](https://example.com/about)
-```
-
-A good llms.txt looks like this:
-
-```markdown
-# Acme Analytics
-
-> Real-time analytics platform for e-commerce teams. Tracks conversion funnels, cohort retention, and revenue attribution across Shopify, WooCommerce, and custom storefronts. Used by 2,000+ stores processing $50M+ in monthly GMV.
+> Specific description: domain, audience, scope, differentiator. This is what LLMs read to decide relevance.
 
 ## Core Product
-- [Dashboard Overview](https://acme.com/docs/dashboard): How to read the main analytics dashboard, including funnel visualization and cohort views
-- [Event Tracking Setup](https://acme.com/docs/events): Installing the tracking snippet and configuring custom events
-- [Revenue Attribution](https://acme.com/docs/attribution): How multi-touch attribution models work in Acme
+- [Feature Name](https://example.com/feature): What an agent will find and can learn here
 
-## Integrations
-- [Shopify Integration](https://acme.com/integrations/shopify): One-click install, automatic order and cart event tracking
-- [REST API](https://acme.com/api): Query your analytics data programmatically. Covers authentication, endpoints, and rate limits.
+## Documentation
+- [Getting Started](https://example.com/docs/start): First steps, setup, and initial configuration
+- [API Reference](https://example.com/api): All endpoints, authentication, rate limits, and examples
 
-## Pricing
-- [Plans](https://acme.com/pricing): Starter, Growth, and Enterprise tiers with feature comparison
+## About
+- [About](https://example.com/about): Organization background and mission
+- [Pricing](https://example.com/pricing): Plans with feature and limit comparisons
 ```
 
-The difference: specificity. The agent reading the good version knows exactly what the site is for, who uses it, and what it will find on each page before fetching a single URL.
-
-### The description blockquote is the most important field
-
-Agents read the blockquote description to decide relevance. Make it specific enough to answer these questions: What does this site do? Who is it for? What is the scale or scope? What makes it different?
-
-Never write "We build great software" or "Welcome to our website." Write what you would tell a journalist in the first sentence of an email pitch.
-
-### llms-full.txt: go comprehensive
-
-`/llms-full.txt` is the expanded version. Include every route, all API endpoint documentation, every major feature documented in detail. Some agents, when they have permission to read deeply, will prefer the full version. Treat it as the complete index of your site for machines.
+**Rules ax-audit enforces:**
+- First line must be `# Site Name` (H1, no exceptions)
+- Second non-blank line must be `> description` (blockquote, not paragraph)
+- At least one `##` section heading
+- At least one Markdown link `[text](url)`
+- Minimum 100 characters (aim for 500+)
+- Content-Type must be `text/plain` or `text/markdown`
 
 ### Implementation
 
-**Next.js App Router:** serve dynamically so content stays current:
+**Next.js App Router** (dynamic, so content stays current):
 
 ```ts
 // app/llms.txt/route.ts
@@ -139,11 +202,12 @@ export async function GET() {
 
 > Specific description of what this site does, who it serves, and what makes it useful.
 
-## Section Name
-- [Page Title](https://example.com/page): What an agent will find on this page
+## Core Product
+- [Feature](https://example.com/feature): What agents will find here
 
-## API
-- [API Reference](https://example.com/api): Endpoints, authentication, and usage examples
+## Documentation
+- [Docs](https://example.com/docs): Technical documentation and guides
+- [API](https://example.com/api): API reference with all endpoints
 `;
 
   return new NextResponse(content, {
@@ -155,9 +219,9 @@ export async function GET() {
 }
 ```
 
-The `X-Robots-Tag: noindex` header prevents search engines from indexing the raw text file while keeping it fully accessible to AI agents that fetch it directly.
+The `X-Robots-Tag: noindex` keeps this file out of Google search results while remaining fully accessible to AI agents that fetch it directly.
 
-**Astro:** static or dynamic endpoint:
+**Astro:**
 
 ```ts
 // src/pages/llms.txt.ts
@@ -169,13 +233,9 @@ export async function GET() {
 }
 ```
 
-**Rules that ax-audit enforces:**
-- First line must be `# Site Name` (H1 heading, no exceptions)
-- Second non-blank line must be `> description` (blockquote, not a paragraph)
-- At least one `##` section heading
-- At least one Markdown link `[text](url)`
-- Minimum 100 characters total (aim for 500+)
-- Content-Type must be `text/plain` or `text/markdown`
+### llms-full.txt: go comprehensive
+
+`/llms-full.txt` is the expanded version. Include every route, all API endpoint documentation, every major feature documented in full. Some agents, when they have permission to read deeply, prefer the full version. Treat it as the machine-readable index of your entire site.
 
 ---
 
@@ -183,23 +243,21 @@ export async function GET() {
 
 ### The wildcard trap
 
-Most sites have `User-agent: * / Allow: /` and think they are done. This is wrong for two reasons.
+Most sites have `User-agent: * / Allow: /` and consider it done. This is inadequate for two reasons.
 
-First, it gives AI crawlers no explicit signal that you want them. Some crawlers prefer explicit permission over relying on the wildcard. Second, if you ever add a `Disallow` rule under the wildcard group, you may accidentally block AI crawlers you did not intend to block. Explicit rules are immune to this.
+First, it gives AI crawlers no explicit signal of intent. Some crawlers prefer explicit permission over inferring from the wildcard. Second, any future `Disallow` rule under the wildcard group accidentally blocks crawlers you did not intend to block. Explicit rules are immune to this.
 
-The wildcard rule is a fallback. Explicit rules are a declaration of intent. Declare your intent.
+The wildcard is a fallback. Explicit rules are a declaration. Declare your intent for every major AI agent.
 
-### The three buckets of AI crawlers
+### The three buckets
 
-AI crawlers fall into three distinct categories with different behaviors and purposes:
+| Bucket | Purpose | Examples |
+| --- | --- | --- |
+| Training | Fetch content to build model training datasets | GPTBot, ClaudeBot, Google-Extended, CCBot, Bytespider |
+| Search & answer | Fetch live content to answer user queries | OAI-SearchBot, ChatGPT-User, PerplexityBot, GeminiBot |
+| Fetching agents | On-demand retrieval for user or automated workflows | FirecrawlAgent, Bingbot |
 
-**Training crawlers** fetch content to build datasets for model training. These include GPTBot, ClaudeBot, Google-Extended, CCBot, Bytespider, and others. They are the most consequential to block or allow because their access determines whether your content ends up in the training data of future models.
-
-**Search and answer engine crawlers** fetch content to answer live user queries. OAI-SearchBot, ChatGPT-User, Claude-SearchBot, PerplexityBot, GeminiBot. If you want AI answer engines to cite your site, these must be allowed.
-
-**Fetching agents** retrieve content on behalf of users or automated workflows. FirecrawlAgent and similar. These represent the new wave of autonomous agent tooling.
-
-You need rules for all three buckets. The core eight that ax-audit requires explicit entries for: `GPTBot`, `ClaudeBot`, `ChatGPT-User`, `Claude-SearchBot`, `Google-Extended`, `PerplexityBot`, `OAI-SearchBot`, `CCBot`.
+You need explicit rules for all three. Blocking training crawlers affects whether your content ends up in future models. Blocking search crawlers affects whether AI answer engines cite you for live queries. Both have consequences.
 
 ### The complete robots.txt
 
@@ -207,7 +265,7 @@ You need rules for all three buckets. The core eight that ax-audit requires expl
 User-agent: *
 Allow: /
 
-# AI Training
+# Training crawlers
 User-agent: GPTBot
 Allow: /
 
@@ -262,7 +320,7 @@ Allow: /
 User-agent: Diffbot
 Allow: /
 
-# AI Search and Answer Engines
+# Search and answer engines
 User-agent: OAI-SearchBot
 Allow: /
 
@@ -299,7 +357,7 @@ Allow: /
 User-agent: PhindBot
 Allow: /
 
-# AI Fetching Agents
+# Fetching agents
 User-agent: FirecrawlAgent
 Allow: /
 
@@ -313,13 +371,18 @@ Sitemap: https://example.com/sitemap.xml
 import type { MetadataRoute } from 'next';
 
 const AI_CRAWLERS = [
+  // Training
   'GPTBot', 'ClaudeBot', 'Claude-Web', 'Anthropic-AI',
   'Google-Extended', 'CCBot', 'Bytespider',
-  'Meta-ExternalAgent', 'Meta-ExternalFetcher', 'Cohere-AI',
-  'Applebot-Extended', 'Amazonbot', 'AI2Bot', 'DeepSeek-AI', 'MistralAI-User',
+  'Meta-ExternalAgent', 'Meta-ExternalFetcher',
+  'Cohere-AI', 'cohere-training-data-crawler',
+  'Applebot-Extended', 'Amazonbot', 'AI2Bot', 'AI2Bot-Dolma',
+  'DeepSeek-AI', 'MistralAI-User', 'Diffbot',
+  // Search and answer
   'OAI-SearchBot', 'ChatGPT-User', 'Claude-SearchBot', 'Claude-User',
-  'PerplexityBot', 'Perplexity-User', 'DuckAssistBot', 'GeminiBot',
-  'Google-CloudVertexBot', 'KagiBot', 'YouBot', 'PhindBot',
+  'PerplexityBot', 'Perplexity-User', 'DuckAssistBot',
+  'GeminiBot', 'Google-CloudVertexBot', 'KagiBot', 'YouBot', 'PhindBot',
+  // Fetching
   'FirecrawlAgent',
 ];
 
@@ -334,9 +397,7 @@ export default function robots(): MetadataRoute.Robots {
 }
 ```
 
-### Scoring: why every missing crawler costs you
-
-ax-audit scores robots.txt heavily (weight 11) because incorrect configuration can silently block all AI traffic. The scoring subtracts proportionally for each missing core crawler. A wildcard-only robots.txt scores much lower than one with explicit rules, even if both technically allow access.
+The minimum required core (ax-audit fails without these eight): `GPTBot`, `ClaudeBot`, `ChatGPT-User`, `Claude-SearchBot`, `Google-Extended`, `PerplexityBot`, `OAI-SearchBot`, `CCBot`.
 
 ---
 
@@ -344,61 +405,43 @@ ax-audit scores robots.txt heavily (weight 11) because incorrect configuration c
 
 ### What A2A actually is
 
-The Agent-to-Agent (A2A) protocol is Google's open standard for how AI agents discover and communicate with web services. The `/.well-known/agent.json` file is your agent card: it tells other agents what your site can do, how to authenticate, and what skills it offers.
+The Agent-to-Agent protocol is Google's open standard for how AI agents discover and communicate with web services. `/.well-known/agent.json` is your agent card: it declares what your site can do, how to authenticate, and what skills agents can invoke.
 
-This matters because AI orchestration systems (Claude, Gemini agents, LangChain apps) read agent.json to decide whether to include your site as a tool in their workflow. A well-formed agent card gets you into agent toolchains. A missing one means agents must infer your capabilities or skip you entirely.
+AI orchestration systems read `agent.json` to decide whether to include your site as a tool in their workflow. A well-formed agent card gets you into agent toolchains. A missing one means agents skip you or must infer capabilities from raw HTML.
 
-### The skills array is not optional
+### Skills that get used vs skills that get ignored
 
-The `skills` array is what makes agent.json useful. Each skill describes a capability: what an agent can accomplish with your site. Vague skills are nearly useless. Specific skills get your site used.
+The `skills` array is the entire point of `agent.json`. Vague skills are not useful. Specific skills get invoked.
 
-Wrong:
+| Bad skill | Good skill |
+| --- | --- |
+| `{ "id": "browse", "description": "Browse the site" }` | `{ "id": "search-docs", "description": "Search technical documentation by keyword, feature name, or API endpoint. Returns ranked results with page titles, descriptions, and direct URLs." }` |
+| `{ "id": "api", "description": "Use the API" }` | `{ "id": "get-pricing", "description": "Retrieve current pricing plans with per-plan feature lists, usage limits, and billing cycle details." }` |
 
-```json
-"skills": [
-  { "id": "browse", "description": "Browse the site" }
-]
-```
-
-Right:
-
-```json
-"skills": [
-  {
-    "id": "search-docs",
-    "description": "Search technical documentation by keyword, topic, or API endpoint name"
-  },
-  {
-    "id": "get-pricing",
-    "description": "Retrieve current pricing plans with feature comparisons and limits"
-  },
-  {
-    "id": "lookup-changelog",
-    "description": "Find release notes and breaking changes for a specific version"
-  }
-]
-```
-
-Each skill should answer: what specific query or task would an agent use this skill for?
+Each skill description should answer: what specific query or task would an agent use this skill for?
 
 ### The URL origin requirement
 
-The `url` field must match the site's origin exactly. If you audit `https://example.com` but your agent.json has `url: "https://www.example.com"`, ax-audit flags it as a mismatch. This matters because agents use the URL field to confirm they are communicating with the authoritative agent for a given domain.
+The `url` field must match the site's origin exactly. If you audit `https://example.com` but `agent.json` has `"url": "https://www.example.com"`, ax-audit flags it as a mismatch. Agents use the URL field to confirm they are communicating with the authoritative agent for a given domain.
 
-### CORS: the silent killer
+### CORS: the silent failure
 
-`/.well-known/agent.json` must return `Access-Control-Allow-Origin: *`. Without it, browser-based AI agents (running in user-facing Claude interfaces, for example) cannot fetch your agent card due to cross-origin restrictions. The file can exist and be perfectly valid, but agents will get a network error. ax-audit checks for this on all well-known resources.
+`/.well-known/agent.json` must return `Access-Control-Allow-Origin: *`. Without it, browser-based AI agents get a CORS error. The file can exist and be perfectly valid JSON and still be completely inaccessible. ax-audit checks for this. It is the most commonly missed configuration.
 
 ```json
 {
   "name": "Site Name",
-  "description": "What agents can accomplish with this site",
+  "description": "What agents can accomplish with this site. Be specific about capabilities.",
   "url": "https://example.com",
   "protocolVersion": "0.2.0",
   "skills": [
     {
-      "id": "skill-id",
-      "description": "Specific description of what this skill enables an agent to do"
+      "id": "search",
+      "description": "Search site content by keyword or topic. Returns titles, descriptions, and URLs of matching pages."
+    },
+    {
+      "id": "get-docs",
+      "description": "Retrieve technical documentation for a specific feature, API endpoint, or integration."
     }
   ],
   "capabilities": {
@@ -412,28 +455,26 @@ The `url` field must match the site's origin exactly. If you audit `https://exam
 }
 ```
 
-Serve this as `public/.well-known/agent.json` with the header:
+Serve this as `public/.well-known/agent.json` with:
 
 ```
-Access-Control-Allow-Origin: *
 Content-Type: application/json
+Access-Control-Allow-Origin: *
 ```
 
 ---
 
-## Structured Data: Machine Vocabulary
+## Structured Data: The Knowledge Graph
 
-### Why JSON-LD beats everything else
+### Why JSON-LD beats everything
 
-Microdata and RDFa embed schema.org markup in HTML, coupling it tightly to your markup structure. JSON-LD lives in a `<script>` tag in `<head>`, independent of HTML structure. When your markup changes, your structured data stays intact. When agents parse your page, the JSON-LD is immediately available without walking the DOM.
+Microdata and RDFa embed schema.org markup in HTML, coupling it tightly to your markup structure. JSON-LD lives in a `<script>` tag in `<head>`, independent of layout. When your HTML structure changes, your structured data is untouched. When agents parse your page, JSON-LD is immediately available without walking the DOM.
 
 Always use JSON-LD. Never use microdata.
 
 ### The @graph philosophy
 
-The `@graph` array lets you declare multiple entities in a single block and link them by `@id`. This is the correct pattern for any page with more than one entity type.
-
-Without `@graph`, your Organization is disconnected from your WebSite. Your WebPage does not know it belongs to your site. Entities are islands. With `@graph`, they form a connected knowledge graph that LLMs can reason over.
+The `@graph` array lets you declare multiple entities in a single block and link them by `@id`. Without `@graph`, your Organization is disconnected from your WebSite. Your WebPage does not know it belongs to your site. Entities are islands. With `@graph`, they form a connected knowledge graph that LLMs can traverse and reason over.
 
 ```json
 {
@@ -456,18 +497,23 @@ Without `@graph`, your Organization is disconnected from your WebSite. Your WebP
       "sameAs": [
         "https://twitter.com/handle",
         "https://linkedin.com/company/name",
-        "https://github.com/org"
+        "https://github.com/org",
+        "https://en.wikipedia.org/wiki/Organization_Name"
       ]
     }
   ]
 }
 ```
 
-The `publisher` field linking WebSite to Organization via `@id` is what turns two separate entities into a graph. ax-audit checks that at least two of the key entity types (Person, Organization, WebSite, WebPage, ProfilePage) are present.
+### The sameAs property and LLM grounding
 
-### Every page needs WebPage and BreadcrumbList
+`sameAs` is how you connect your entities to the broader knowledge graph that LLMs were trained on. When your Organization's `sameAs` includes the Wikipedia, Wikidata, and LinkedIn URLs, LLMs can ground your entity against their pre-existing knowledge of your company. They no longer have to treat you as an unknown entity.
 
-The root layout handles WebSite and Organization. Every individual page needs its own WebPage entity and a BreadcrumbList.
+Include `sameAs` for every real-world entity: organizations, people, locations, products. Link to Wikipedia, Wikidata (`https://www.wikidata.org/wiki/Q...`), Crunchbase, LinkedIn, and any authoritative source where the entity has a profile.
+
+### Per-page structured data
+
+Every page needs a WebPage entity and a BreadcrumbList. The root layout handles WebSite and Organization. Individual pages extend the graph:
 
 ```json
 {
@@ -475,36 +521,92 @@ The root layout handles WebSite and Organization. Every individual page needs it
   "@graph": [
     {
       "@type": "WebPage",
-      "@id": "https://example.com/docs/getting-started/#webpage",
-      "url": "https://example.com/docs/getting-started/",
-      "name": "Getting Started",
-      "description": "How to set up and run your first query",
+      "@id": "https://example.com/docs/setup/#webpage",
+      "url": "https://example.com/docs/setup/",
+      "name": "Setup Guide",
+      "description": "How to install and configure the product",
       "isPartOf": { "@id": "https://example.com/#website" },
-      "breadcrumb": { "@id": "https://example.com/docs/getting-started/#breadcrumb" }
+      "datePublished": "2024-01-15",
+      "dateModified": "2025-03-10"
     },
     {
       "@type": "BreadcrumbList",
-      "@id": "https://example.com/docs/getting-started/#breadcrumb",
       "itemListElement": [
         { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://example.com" },
         { "@type": "ListItem", "position": 2, "name": "Docs", "item": "https://example.com/docs" },
-        { "@type": "ListItem", "position": 3, "name": "Getting Started", "item": "https://example.com/docs/getting-started" }
+        { "@type": "ListItem", "position": 3, "name": "Setup", "item": "https://example.com/docs/setup" }
       ]
     }
   ]
 }
 ```
 
-BreadcrumbList tells agents exactly where a page sits in the site hierarchy. This is how agents understand context: is this a top-level marketing page or a third-level documentation article?
+`datePublished` and `dateModified` are temporal signals. LLMs use them to assess content freshness. A page with `dateModified` from last month ranks higher for freshness than one with no date. Always include both.
+
+### Content-type specific schemas
+
+Beyond WebPage, apply the correct schema type for the content:
+
+| Content type | Schema type | Key fields |
+| --- | --- | --- |
+| Blog post, article | `Article` | `headline`, `author`, `datePublished`, `dateModified`, `image` |
+| Documentation page | `TechArticle` | `headline`, `proficiencyLevel`, `dependencies` |
+| FAQ page | `FAQPage` | `mainEntity` array of `Question` with `acceptedAnswer` |
+| How-to guide | `HowTo` | `name`, `step` array with `HowToStep` |
+| Product page | `Product` | `name`, `description`, `offers`, `aggregateRating` |
+| Person profile | `Person` | `name`, `jobTitle`, `affiliation`, `sameAs` |
+| Event | `Event` | `name`, `startDate`, `location`, `organizer` |
+
+**Article example:**
+
+```json
+{
+  "@type": "Article",
+  "@id": "https://example.com/blog/post/#article",
+  "headline": "How to Configure Zero-Downtime Deployments",
+  "description": "Step-by-step guide for configuring rolling deployments with health checks",
+  "datePublished": "2025-01-10",
+  "dateModified": "2025-05-20",
+  "author": {
+    "@type": "Person",
+    "@id": "https://example.com/team/alice/#person",
+    "name": "Alice Chen",
+    "url": "https://example.com/team/alice"
+  },
+  "publisher": { "@id": "https://example.com/#organization" },
+  "image": "https://example.com/blog/post/cover.png",
+  "isPartOf": { "@id": "https://example.com/#website" }
+}
+```
+
+**FAQPage example** (extremely high citation value for AI answer engines):
+
+```json
+{
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "How does billing work?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "You are billed monthly based on the plan you select. The Starter plan is $29/month for up to 10,000 events. Upgrade or downgrade at any time."
+      }
+    }
+  ]
+}
+```
+
+FAQPage structured data is one of the highest-signal content types for AI answer engines. When a user asks a question that matches one of your FAQ entries, the agent has a directly usable answer. Use it on pricing pages, support pages, and product pages.
 
 ### Validation is not optional
 
-Every JSON-LD block must pass [validator.schema.org](https://validator.schema.org/) without errors. A JSON syntax error in your structured data block silently invalidates the entire block. ax-audit parses every JSON-LD block and flags invalid JSON. Run the validator before shipping.
+Every JSON-LD block must pass [validator.schema.org](https://validator.schema.org/) without errors. A syntax error silently invalidates the entire block. ax-audit checks for invalid JSON. ax-audit does not catch schema violations. Use both.
 
-**Next.js:** inject JSON-LD in layout.tsx and page.tsx:
+**Next.js JSON-LD injection:**
 
 ```tsx
-// In layout.tsx for site-wide entities
+// app/layout.tsx
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -523,6 +625,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         name: 'Organization Name',
         url: 'https://example.com',
         logo: 'https://example.com/logo.png',
+        sameAs: ['https://twitter.com/handle', 'https://linkedin.com/company/name'],
       },
     ],
   };
@@ -545,19 +648,19 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
 ## HTTP Headers: The Agent Handshake
 
-### Security headers signal trustworthiness
+### Security headers as trust signals
 
-Security headers are not just for humans. Automated systems and AI agents treat the presence of security headers as a trust signal. A site without `Strict-Transport-Security` and `X-Content-Type-Options` looks misconfigured to any automated scanner. These headers cost nothing and their absence costs credibility.
+Security headers are read by automated systems before body content. A site without `Strict-Transport-Security` and `X-Content-Type-Options` looks misconfigured to any automated scanner. These headers cost nothing and their absence costs credibility.
 
-The two critical headers that ax-audit flags as failures (not warnings) if missing:
+Two headers that ax-audit marks as failures if missing (not warnings):
 
-- `Strict-Transport-Security: max-age=31536000; includeSubDomains` declares that HTTPS is required. Without it, agents must infer HTTPS is safe.
-- `X-Content-Type-Options: nosniff` prevents MIME type sniffing. Without it, agents cannot fully trust that the Content-Type they requested matches what they received.
+- `Strict-Transport-Security: max-age=31536000; includeSubDomains` declares that HTTPS is enforced. Without it, agents cannot confirm you enforce HTTPS.
+- `X-Content-Type-Options: nosniff` prevents MIME sniffing. Without it, agents cannot fully trust that what they requested matches what they received.
 
-The full security header set:
+Full required set:
 
 ```
-Strict-Transport-Security: max-age=31536000; includeSubDomains
+Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
 X-Content-Type-Options: nosniff
 X-Frame-Options: SAMEORIGIN
 Referrer-Policy: strict-origin-when-cross-origin
@@ -565,25 +668,27 @@ Permissions-Policy: camera=(), microphone=(), geolocation=()
 Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'
 ```
 
+The `preload` directive on HSTS, combined with `max-age=31536000` and `includeSubDomains`, makes the domain eligible for the HSTS preload list. Submit it at [hstspreload.org](https://hstspreload.org). Once preloaded, browsers enforce HTTPS even on the first visit, before any HTTP response is seen.
+
 ### The Link header is machine-readable navigation
 
-The `Link` response header is how you tell any HTTP client where your AI discovery files live without requiring them to guess standard paths. ax-audit checks for both references:
+The `Link` response header tells any HTTP client where your AI discovery files live without requiring them to guess:
 
 ```
 Link: </llms.txt>; rel="ai-content-policy", </.well-known/agent.json>; rel="agent-card"
 ```
 
-This header on every page response means an agent that fetches any page can immediately discover your llms.txt and agent.json without prior knowledge of your site structure.
+This on every page response means an agent that fetches any URL on your site can immediately discover your `llms.txt` and `agent.json`. ax-audit checks for both references in the Link header.
 
-### CORS on well-known resources
+### CORS on all well-known resources
 
-Every file under `/.well-known/` must serve `Access-Control-Allow-Origin: *`. Browser-based AI agents are subject to the same-origin policy. Without CORS, your agent.json, mcp.json, and other discovery files are inaccessible to client-side agents.
+Every file under `/.well-known/` must serve `Access-Control-Allow-Origin: *`. Browser-based AI agents are subject to the same-origin policy. Without CORS, your `agent.json`, `mcp.json`, `openapi.json`, and other discovery files are inaccessible to any client-side agent. The files can be perfectly formed and still silently fail.
 
-This is the most commonly missed configuration. The files exist. The content is correct. But agents silently fail to fetch them because the CORS header is absent.
+This is the most commonly missed configuration. It fails silently, which is why it is so dangerous.
 
 ### X-Robots-Tag on llms.txt
 
-`/llms.txt` should not appear in search engine results. It is for machines, not users. Add `X-Robots-Tag: noindex` to the response headers when serving llms.txt. This keeps it out of Google while keeping it fully accessible to AI agents that fetch it directly.
+Add `X-Robots-Tag: noindex` to the `/llms.txt` response. It keeps the raw text file out of Google results while keeping it fully accessible to AI agents that fetch it directly. Users searching Google should find your website, not its machine-readable index.
 
 ### Stack configuration
 
@@ -601,7 +706,7 @@ const nextConfig: NextConfig = {
           { key: 'X-Content-Type-Options', value: 'nosniff' },
           { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
-          { key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains' },
+          { key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains; preload' },
           { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
           {
             key: 'Link',
@@ -613,6 +718,7 @@ const nextConfig: NextConfig = {
         source: '/.well-known/:path*',
         headers: [
           { key: 'Access-Control-Allow-Origin', value: '*' },
+          { key: 'Cache-Control', value: 'public, max-age=3600' },
         ],
       },
     ];
@@ -633,7 +739,7 @@ export default nextConfig;
         { "key": "X-Content-Type-Options", "value": "nosniff" },
         { "key": "X-Frame-Options", "value": "SAMEORIGIN" },
         { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
-        { "key": "Strict-Transport-Security", "value": "max-age=31536000; includeSubDomains" },
+        { "key": "Strict-Transport-Security", "value": "max-age=31536000; includeSubDomains; preload" },
         { "key": "Permissions-Policy", "value": "camera=(), microphone=(), geolocation=()" },
         { "key": "Link", "value": "</llms.txt>; rel=\"ai-content-policy\", </.well-known/agent.json>; rel=\"agent-card\"" }
       ]
@@ -641,7 +747,8 @@ export default nextConfig;
     {
       "source": "/.well-known/(.*)",
       "headers": [
-        { "key": "Access-Control-Allow-Origin", "value": "*" }
+        { "key": "Access-Control-Allow-Origin", "value": "*" },
+        { "key": "Cache-Control", "value": "public, max-age=3600" }
       ]
     }
   ]
@@ -654,7 +761,7 @@ export default nextConfig;
 
 ### The SPA trap
 
-This is the most consequential problem on the modern web for AI readability, and it is invisible to developers. A React or Vue SPA returns this to a non-JS crawler:
+This is the most consequential problem on the modern web for AI readability, and it is invisible to developers working in browsers. A React or Vue SPA delivers this to a non-JS crawler:
 
 ```html
 <html>
@@ -665,86 +772,241 @@ This is the most consequential problem on the modern web for AI readability, and
 </html>
 ```
 
-GPTBot, ClaudeBot, CCBot, and most training and search crawlers do not execute JavaScript. They receive the empty shell, extract zero text, and conclude your site has no content. Your llms.txt, agent.json, and structured data are irrelevant because the agent cannot even read your pages.
+GPTBot, ClaudeBot, CCBot, and most training and search crawlers do not execute JavaScript. They receive the empty shell, extract zero text, and conclude the site has no content. Your `llms.txt`, `agent.json`, and structured data are irrelevant because the agent cannot read any pages.
 
-ax-audit checks for this by detecting empty SPA mount points (`#root`, `#app`, `#__next`, `#__nuxt`) and measuring visible text length. A page with fewer than 500 characters and 80 words of visible text fails.
+ax-audit detects this by finding empty SPA mount points (`#root`, `#app`, `#__next`, `#__nuxt`) and by measuring visible text. A page with fewer than 500 characters and 80 words of visible text in static HTML fails.
 
-The fix is server-side rendering. Next.js with App Router renders server components to HTML by default. Astro renders everything to HTML by default. Any page that needs to be machine-readable must be server-rendered.
+The fix is server-side rendering. Next.js App Router renders server components to HTML by default. Astro renders everything to HTML by default. Any page that must be machine-readable must be server-rendered.
 
 ### The text-to-markup ratio
 
-A healthy page has at least 5% visible text relative to total HTML. When a page is mostly `<div class="...">` wrappers and `<script>` tags with minimal content, the ratio drops below this threshold. This does not necessarily mean JS-only rendering, but it is a strong signal of content-light pages that give agents little to work with.
+A healthy page has at least 5% visible text relative to total HTML. When a page is mostly wrapper divs, style attributes, and script tags with minimal content, the ratio drops below this threshold. This signals content-light pages that give agents little to work with, even when the content technically exists.
 
 Write content-dense pages. Expand thin pages. An agent deciding whether to cite your site will not cite a page that is mostly UI chrome and navigation.
 
-### Semantic landmarks are the page's skeleton
+### Semantic landmarks as the page skeleton
 
-AI agents parse semantic landmarks to understand page structure before they read content. `<main>` identifies the primary content region. `<article>` identifies a self-contained piece of content. `<nav>` contains navigation. `<header>` and `<footer>` are structural.
+Agents parse semantic landmarks before reading content. `<main>` identifies the primary content region. `<article>` identifies a self-contained content unit. `<nav>` contains navigation. These are not suggestions. They are the skeleton every agent uses to understand page structure.
 
-Without semantic landmarks, agents must guess which of hundreds of divs contains the content they are looking for. With them, agents can immediately locate the primary content region with `document.querySelector('main')`.
+Without landmarks, agents must guess which of hundreds of divs contains the content they want. With landmarks, `document.querySelector('main')` immediately finds the primary content.
 
-ax-audit expects at least 3 of: `<main>`, `<article>`, `<section>`, `<header>`, `<footer>`, `<nav>`.
+ax-audit expects at least 3 of: `<main>`, `<article>`, `<section>`, `<header>`, `<footer>`, `<nav>`. Never use `<div>` where a semantic element fits.
 
-Never use `<div>` where a semantic element fits. This is not a nice-to-have. It is a structural requirement for machine readability.
+### One H1 per page, always
 
-### The single H1 rule
+One `<h1>` per page declares the primary topic. Multiple H1s create ambiguity. No H1 means no declared topic. The H1 text is what agents use to understand page subject matter. Make it specific and descriptive.
 
-One `<h1>` per page. It tells every agent, human and machine, what this page is about. Multiple H1s create ambiguity. No H1 means the page has no declared primary topic.
-
-The H1 text is what agents use to understand page subject matter. Make it specific and descriptive, not clever or minimal. "Getting Started with Acme Analytics" is better than "Getting Started."
+| Bad | Good |
+| --- | --- |
+| `<h1>Getting Started</h1>` | `<h1>Getting Started with Acme Analytics: Installation and First Query</h1>` |
+| `<h1>Pricing</h1>` | `<h1>Acme Analytics Pricing: Starter, Growth, and Enterprise Plans</h1>` |
+| Two or more `<h1>` tags | Exactly one `<h1>`, remaining headings start at `<h2>` |
 
 ### The noscript fallback
 
-A page with more than 15 executable `<script>` tags and no `<noscript>` fallback gets flagged. If JavaScript is critical to your site's functionality, provide a `<noscript>` block that either explains the JS requirement or offers a minimal static alternative. This catches agents that operate with JS disabled.
+A page with more than 15 executable `<script>` tags and no `<noscript>` fallback gets flagged. If JavaScript is critical to your site's functionality, provide a `<noscript>` block that explains this or offers a minimal alternative. This catches agents operating with JS disabled.
 
 ---
 
-## Meta Tags: The Cross-Consumer Signal
+## SEO Basics: Identity Signals
 
-### OG tags are for agents too
+These are not SEO tricks. They are the unambiguous identity and language signals every agent uses before reading any content.
 
-Open Graph tags were designed for social sharing, but AI agents read them to understand page identity. The `og:title`, `og:description`, and `og:url` fields provide a concise, structured summary of any page. When an agent needs to quickly determine page relevance, OG tags are faster to parse than body content.
+### Title: 20-70 characters
 
-Every page needs:
+The `<title>` is how agents identify the document. Titles under 20 characters are too vague. Titles over 70 characters get truncated by most agents and search engines.
+
+| Bad | Good |
+| --- | --- |
+| `<title>Home</title>` (4 chars) | `<title>Acme Analytics: E-commerce Conversion Tracking</title>` (61 chars) |
+| `<title>Acme Analytics - The Best Real-Time E-commerce Analytics Platform for Growing Shopify and WooCommerce Stores</title>` (118 chars) | `<title>Acme Analytics: Real-Time E-commerce Dashboard</title>` (62 chars) |
+
+### Description: 70-160 characters, unique per page
+
+The meta description is the canonical short description agents use when summarizing a page. It must be:
+- 70-160 characters (outside this range gets warnings)
+- Different from the title (ax-audit checks for duplicate title/description)
+- Unique per page (never reuse descriptions)
+- Specific to the page's actual content
+
+### Canonical: absolute URL, always
+
+```html
+<!-- Correct -->
+<link rel="canonical" href="https://example.com/page/" />
+
+<!-- Wrong: relative URL -->
+<link rel="canonical" href="/page/" />
+
+<!-- Wrong: multiple canonicals -->
+<link rel="canonical" href="https://example.com/page/" />
+<link rel="canonical" href="https://example.com/page" />
+```
+
+Use exactly one canonical per page. Multiple canonicals are ignored. Relative URLs are ambiguous when fetched outside the original page context. The canonical must be absolute (`https://...`).
+
+### Language: html lang attribute
+
+```html
+<html lang="en">         <!-- English -->
+<html lang="en-US">      <!-- US English -->
+<html lang="es">         <!-- Spanish -->
+<html lang="zh-Hant">    <!-- Traditional Chinese -->
+```
+
+The `lang` attribute must be a valid BCP 47 tag. Without it, agents cannot determine the document language, which affects summarization model selection and multilingual ranking.
+
+### Charset and viewport
+
+Both must be present in `<head>`:
 
 ```html
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Page Title | Site Name</title>
-<meta name="description" content="120 to 160 character description specific to this page" />
-<link rel="canonical" href="https://example.com/page/" />
+```
 
-<meta property="og:title" content="Page Title" />
-<meta property="og:description" content="Page description" />
-<meta property="og:type" content="website" />
-<meta property="og:url" content="https://example.com/page/" />
-<meta property="og:image" content="https://example.com/og-image.png" />
-<meta property="og:site_name" content="Site Name" />
+`charset` as the first element in `<head>` prevents character decoding issues. Without it, agents can misread non-ASCII content. Without `viewport`, mobile agents render the page as a desktop layout.
 
+### hreflang for multilingual sites
+
+If your site has multiple language versions, declare them explicitly:
+
+```html
+<link rel="alternate" hreflang="en" href="https://example.com/en/page/" />
+<link rel="alternate" hreflang="es" href="https://example.com/es/page/" />
+<link rel="alternate" hreflang="x-default" href="https://example.com/page/" />
+```
+
+The `x-default` entry is required. Without it, ax-audit warns. `x-default` is the fallback for users whose language does not match any explicit hreflang. Multilingual agents use these signals to select the correct language version for a given user context.
+
+---
+
+## Meta Tags: The Head's AI Layer
+
+ax-audit measures five categories in the `<head>`: AI-specific meta tags, alternate link relations, identity links, OpenGraph, and Twitter Card. Each category is independent.
+
+### AI meta tags: the most missed check
+
+Most developers have never heard of `ai:*` meta tags. ax-audit scores them in the meta-tags check and this is a common source of lost points.
+
+```html
+<meta name="ai:summary" content="Brief summary of this specific page for AI agents" />
+<meta name="ai:content_type" content="documentation" />
+<meta name="ai:author" content="Author Name or Organization Name" />
+<meta name="ai:api" content="https://example.com/api" />
+<meta name="ai:agent_card" content="https://example.com/.well-known/agent.json" />
+```
+
+These tags give agents structured, page-level metadata without requiring them to parse body content. `ai:summary` is distinct from `meta name="description"` in that it is specifically scoped for machine consumption, not search snippet display.
+
+Valid `ai:content_type` values: `website`, `documentation`, `blog`, `product`, `api`, `portfolio`, `news`, `reference`.
+
+You need at least 3 of the 5 AI meta tags to pass this check. Include all 5 whenever possible.
+
+### rel="alternate" links in HTML head
+
+These are distinct from the `Link` response header. Both are needed. The HTML `<link>` tags make the alternates discoverable to parsers that read the DOM but not HTTP headers.
+
+```html
+<link rel="alternate" type="text/plain" href="/llms.txt" title="LLM-optimized content" />
+<link rel="alternate" type="application/json" href="/.well-known/agent.json" title="Agent Card" />
+```
+
+ax-audit checks for both. Without them, agents that parse `<head>` for discovery signals miss your files even if they exist.
+
+### rel="me" identity links
+
+`rel="me"` links verify your identity across platforms using IndieAuth / WebFinger principles. Mastodon, many AI identity systems, and some agent trust verification systems use these.
+
+```html
+<link rel="me" href="https://github.com/yourname" />
+<link rel="me" href="https://twitter.com/yourname" />
+<link rel="me" href="https://linkedin.com/in/yourname" />
+```
+
+ax-audit warns when no `rel="me"` links are present. For personal sites and creator profiles, these are especially important because they form the identity graph that agents use to establish authorship credibility.
+
+### OpenGraph: required and recommended
+
+| Required | Recommended |
+| --- | --- |
+| `og:title` | `og:image` (1200x630px minimum) |
+| `og:description` | `og:site_name` |
+| `og:url` | |
+| `og:type` | |
+
+`og:type` is one of: `website`, `article`, `profile`, `book`, `music.song`, `video.movie`. Use `article` for blog posts, `website` for general pages.
+
+`og:image` is listed as recommended but is practically required. Its absence is flagged. Create a static `/og-image.png` at minimum. For dynamic content, generate images programmatically.
+
+### Twitter Card
+
+```html
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="Page Title" />
 <meta name="twitter:description" content="Page description" />
 <meta name="twitter:image" content="https://example.com/og-image.png" />
 ```
 
-### og:image is not optional
+Use `summary_large_image` as the card type. It generates the largest, most visible preview. Small card sizes get less engagement and less agent attention when agents process social signals.
 
-ax-audit checks for `og:image` and flags its absence. An image URL that returns 404 is worse than no image. Create a static `/og-image.png` at minimum (1200x630px). For dynamic pages, generate OG images programmatically.
+### Complete head for every page
 
-### The canonical is a deduplication signal
+```html
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Page Title | Site Name</title>
+  <meta name="description" content="Page-specific description, 70-160 chars" />
+  <link rel="canonical" href="https://example.com/page/" />
 
-The `canonical` URL tells agents which URL is authoritative when content appears at multiple paths. Without a canonical, duplicate content (www vs non-www, trailing slash vs none, query parameters) can confuse agents about which URL to cite or index. Every page must have a canonical pointing to its definitive URL.
+  <!-- AI meta tags -->
+  <meta name="ai:summary" content="Brief summary of this page for AI agents" />
+  <meta name="ai:content_type" content="documentation" />
+  <meta name="ai:author" content="Author or Organization Name" />
+  <meta name="ai:api" content="https://example.com/api" />
+  <meta name="ai:agent_card" content="https://example.com/.well-known/agent.json" />
 
-**Next.js metadata API:**
+  <!-- AI discovery alternates -->
+  <link rel="alternate" type="text/plain" href="/llms.txt" title="LLM-optimized content" />
+  <link rel="alternate" type="application/json" href="/.well-known/agent.json" title="Agent Card" />
+
+  <!-- Identity -->
+  <link rel="me" href="https://github.com/yourname" />
+
+  <!-- OpenGraph -->
+  <meta property="og:title" content="Page Title" />
+  <meta property="og:description" content="Page description" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://example.com/page/" />
+  <meta property="og:image" content="https://example.com/og-image.png" />
+  <meta property="og:site_name" content="Site Name" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Page Title" />
+  <meta name="twitter:description" content="Page description" />
+  <meta name="twitter:image" content="https://example.com/og-image.png" />
+
+  <!-- Structured data -->
+  <script type="application/ld+json">{ ... }</script>
+</head>
+```
+
+**Next.js metadata API** (covers all OG, Twitter Card, and basics automatically):
 
 ```tsx
+// app/layout.tsx
+import type { Metadata } from 'next';
+
 export const metadata: Metadata = {
   title: { default: 'Site Name', template: '%s | Site Name' },
-  description: 'Site description',
+  description: 'Site description: specific, 70-160 chars',
   metadataBase: new URL('https://example.com'),
   openGraph: {
     type: 'website',
     siteName: 'Site Name',
+    locale: 'en_US',
     images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'Site Name' }],
   },
   twitter: { card: 'summary_large_image' },
@@ -752,11 +1014,42 @@ export const metadata: Metadata = {
 };
 ```
 
+For AI meta tags in Next.js, use the `other` field:
+
+```tsx
+export const metadata: Metadata = {
+  // ... standard fields
+  other: {
+    'ai:summary': 'Page-specific AI summary',
+    'ai:content_type': 'documentation',
+    'ai:author': 'Author Name',
+    'ai:agent_card': 'https://example.com/.well-known/agent.json',
+  },
+};
+```
+
+For `rel="alternate"` and `rel="me"` links, add them directly in the layout's `<head>`:
+
+```tsx
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en">
+      <head>
+        <link rel="alternate" type="text/plain" href="/llms.txt" title="LLM-optimized content" />
+        <link rel="alternate" type="application/json" href="/.well-known/agent.json" title="Agent Card" />
+        <link rel="me" href="https://github.com/yourname" />
+      </head>
+      <body>{children}</body>
+    </html>
+  );
+}
+```
+
 ---
 
 ## security.txt: The Trust File
 
-`/.well-known/security.txt` is how you declare that your site has an active security contact. For automated systems, it signals that there is a human or team maintaining the site and responding to issues. It is the minimum required by RFC 9116.
+`/.well-known/security.txt` declares that your site has an active security contact. For automated systems, it signals that someone is maintaining the site and responding to issues. It is required by RFC 9116.
 
 ```
 Contact: mailto:security@example.com
@@ -766,22 +1059,17 @@ Canonical: https://example.com/.well-known/security.txt
 Policy: https://example.com/security-policy
 ```
 
-**The expiry trap:** ax-audit checks that `Expires` is in the future. A security.txt with a past expiry date fails. Set it at least one year out and update it annually. The format must be ISO 8601 with timezone: `2027-12-31T23:59:00.000Z`.
-
-`Contact` and `Expires` are the only required fields. Everything else is recommended. Both must be present.
+`Contact` and `Expires` are the only required fields. `Expires` must be in the future and in ISO 8601 format with a timezone. A past expiry is a fail, not a warning. Set it at least one year out and update annually.
 
 ---
 
-## Well-Known AI Files: Emerging Signals
+## Well-Known AI Files
 
-These files do not yet have settled specs, but they are already published by leading sites and read by some agents. Their combined weight in ax-audit is 3, but publishing them costs almost nothing and signals that your site is ahead of the curve.
+These files do not yet have fully settled specs, but they are already published by leading sites and read by agents in production. Their combined weight is 3, but publishing them takes minutes.
 
-### /.well-known/ai.txt (Spawning AI format)
-
-Declares your opt-in or opt-out stance on AI training:
+**`/.well-known/ai.txt`** (Spawning AI training consent):
 
 ```
-# AI Training Policy
 Allow: GPTBot
 Allow: ClaudeBot
 Allow: Google-Extended
@@ -792,51 +1080,28 @@ Policy: https://example.com/ai-policy
 Contact: mailto:ai@example.com
 ```
 
-### /agents.json (OpenAgents / Wildcard)
-
-Describes your site as a callable agent with operations:
+**`/agents.json`** (OpenAgents capability declaration):
 
 ```json
 {
   "name": "Site Name",
   "description": "What agents can do with this site",
   "operations": [
-    {
-      "name": "search",
-      "description": "Search site content"
-    }
+    { "name": "search", "description": "Search site content" }
   ]
 }
 ```
 
-### /.well-known/ai-plugin.json (legacy ChatGPT plugin format)
-
-Still consumed by some agents. Keep it for backwards compatibility:
+**`/.well-known/ai-plugin.json`** (legacy ChatGPT plugin format, still consumed):
 
 ```json
 {
   "schema_version": "v1",
   "name_for_model": "site_name",
   "name_for_human": "Site Name",
-  "description_for_model": "Use this plugin to search and retrieve information from Site Name",
+  "description_for_model": "Use this plugin to search and retrieve information from Site Name. Best for questions about [domain].",
   "description_for_human": "Search Site Name content",
-  "api": {
-    "type": "openapi",
-    "url": "https://example.com/openapi.json"
-  }
-}
-```
-
-### /.well-known/nlweb.json (Microsoft NLWeb)
-
-Natural-language site interface declaration:
-
-```json
-{
-  "version": "1.0",
-  "name": "Site Name",
-  "description": "What this site does",
-  "endpoint": "https://example.com/nlweb"
+  "api": { "type": "openapi", "url": "https://example.com/.well-known/openapi.json" }
 }
 ```
 
@@ -844,16 +1109,14 @@ Natural-language site interface declaration:
 
 ## OpenAPI: API Discoverability
 
-If your site exposes any API, publish an OpenAPI spec at `/openapi.json`. This is how agents discover what programmatic actions they can take with your site.
-
-**Required fields:**
+ax-audit checks for `/.well-known/openapi.json` (not `/openapi.json`). The `.well-known` path is the standard location.
 
 ```json
 {
   "openapi": "3.1.0",
   "info": {
     "title": "Site Name API",
-    "description": "What the API does and what agents can accomplish with it",
+    "description": "What the API does and what agents can accomplish with it. Be specific about domain, data types, and use cases.",
     "version": "1.0.0"
   },
   "servers": [
@@ -863,7 +1126,7 @@ If your site exposes any API, publish an OpenAPI spec at `/openapi.json`. This i
     "/search": {
       "get": {
         "summary": "Search content",
-        "description": "Search site content by keyword. Returns ranked results with titles, descriptions, and URLs.",
+        "description": "Search site content by keyword. Returns ranked results with titles, descriptions, and direct URLs. Useful for agents looking for specific documentation or features.",
         "parameters": [
           {
             "name": "q",
@@ -879,34 +1142,31 @@ If your site exposes any API, publish an OpenAPI spec at `/openapi.json`. This i
 }
 ```
 
-Every path description should explain what an agent would use this endpoint for, not just what it does technically.
+Every path description should answer: what specific task or query would an agent use this endpoint for?
 
-Link your OpenAPI spec from `llms.txt` and from `agent.json`'s `documentationUrl`.
+Link `/.well-known/openapi.json` from your `llms.txt` and from `agent.json`'s `documentationUrl`.
 
 ---
 
 ## MCP: Direct Tool Integration
 
-The Model Context Protocol (MCP) is how reasoning models like Claude integrate your site as a first-class tool. Implementing MCP means agents can call your site's capabilities directly from within their reasoning loop, not just browse it.
+The Model Context Protocol is how reasoning models integrate your site as a first-class tool. Implementing MCP means agents call your site's capabilities directly from their reasoning loop, not just browse it.
 
-`/.well-known/mcp.json` declares your MCP server configuration:
+ax-audit checks `/.well-known/mcp.json`:
 
 ```json
 {
   "name": "Site Name MCP Server",
-  "description": "MCP server for Site Name. Provides tools for searching content, retrieving structured data, and querying the API.",
+  "description": "MCP server for Site Name. Provides tools for searching content, retrieving data, and querying the API.",
   "protocolVersion": "2024-11-05",
   "tools": [
     {
       "name": "search",
-      "description": "Search site content by keyword or topic. Returns titles, descriptions, and URLs of matching pages.",
+      "description": "Search site content by keyword or topic. Returns titles, descriptions, and URLs of matching pages. Use when the user wants to find a specific feature, concept, or documentation section.",
       "inputSchema": {
         "type": "object",
         "properties": {
-          "query": {
-            "type": "string",
-            "description": "Search query"
-          }
+          "query": { "type": "string", "description": "Search query" }
         },
         "required": ["query"]
       }
@@ -922,7 +1182,11 @@ The Model Context Protocol (MCP) is how reasoning models like Claude integrate y
 }
 ```
 
-**Tool descriptions are the difference between used and ignored.** An agent deciding which tool to call reads the description, not the name. "Get data" is useless. "Retrieve the current pricing plan for a given account ID, including feature limits and billing cycle" is actionable.
+### Tool descriptions are the entire value
+
+An agent deciding which tool to invoke reads the description. "Get data" is useless. "Retrieve the current pricing plan for a given account ID, including feature limits, usage counts, and next billing date" is actionable and will be used.
+
+Write tool descriptions as if you are telling a colleague what the tool does, when to use it, and what they will get back.
 
 Serve `/.well-known/mcp.json` with `Access-Control-Allow-Origin: *`.
 
@@ -930,21 +1194,33 @@ Serve `/.well-known/mcp.json` with `Access-Control-Allow-Origin: *`.
 
 ## TLS and HTTPS
 
-All HTTP requests must redirect to HTTPS with a 301 (permanent) redirect. Agents treat non-HTTPS sites as untrustworthy. A 302 (temporary) redirect is incorrect: it tells crawlers the HTTP version is still valid.
+All HTTP traffic must redirect to HTTPS with a **301** (permanent) redirect. A 302 is wrong: it tells crawlers the HTTP version is still valid and they should check again next time.
 
-HSTS must be present: `Strict-Transport-Security: max-age=31536000; includeSubDomains`
+**HSTS requirements (in order of strictness):**
 
-This means:
-- No HTTP endpoints that return content instead of redirecting
-- No mixed content (HTTP resources on HTTPS pages)
-- Valid TLS certificate (not self-signed in production)
-- 301, not 302, for HTTP-to-HTTPS redirects
+```
+Strict-Transport-Security: max-age=31536000                           # minimum
+Strict-Transport-Security: max-age=31536000; includeSubDomains        # recommended
+Strict-Transport-Security: max-age=31536000; includeSubDomains; preload  # gold standard
+```
+
+The `preload` directive + `max-age=31536000` + `includeSubDomains` qualifies your domain for the browser HSTS preload list. Once preloaded, browsers enforce HTTPS even before any HTTP request is made. Submit at [hstspreload.org](https://hstspreload.org) after deploying the full header.
+
+No mixed content. No HTTP endpoints that return content instead of redirecting. Valid production TLS certificate.
 
 ---
 
 ## Sitemap: The Crawl Map
 
-The sitemap is how agents discover the full surface area of your site. It is not just for Google. Any agent that wants to systematically understand what pages exist will read your sitemap.
+Every public URL must be in the sitemap. `changefreq` and `priority` help agents allocate crawl budget intelligently.
+
+| `priority` | Use for |
+| --- | --- |
+| 1.0 | Homepage |
+| 0.9 | Major section landing pages |
+| 0.7 | Content pages, blog posts, documentation |
+| 0.5 | Secondary pages (about, team) |
+| 0.3 | Archive pages, tags, categories |
 
 **Next.js:**
 
@@ -954,13 +1230,18 @@ import type { MetadataRoute } from 'next';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = 'https://example.com';
-
-  // Fetch dynamic routes
   const posts = await getAllPosts();
+  const docs = await getAllDocs();
 
   return [
     { url: base, lastModified: new Date(), changeFrequency: 'monthly', priority: 1 },
     { url: `${base}/docs`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.9 },
+    ...docs.map((doc) => ({
+      url: `${base}/docs/${doc.slug}`,
+      lastModified: new Date(doc.updatedAt),
+      changeFrequency: 'weekly' as const,
+      priority: 0.7,
+    })),
     ...posts.map((post) => ({
       url: `${base}/blog/${post.slug}`,
       lastModified: new Date(post.updatedAt),
@@ -971,31 +1252,79 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 }
 ```
 
-Every public URL must be in the sitemap. The `Sitemap:` directive in robots.txt must point to it.
+The `Sitemap:` directive in `robots.txt` must point to your sitemap URL. ax-audit checks for this directive.
 
 ---
 
-## Content Writing for Agents
+## Content Quality: What Makes Content Citable
 
-### Specificity is the quality signal
+AEO signals get agents to your site. Content quality determines whether they cite it.
 
-Agents evaluate whether to cite your content by reading it. Generic descriptions and vague headings signal low-information content. Specific, factual, detailed content signals a reliable source.
+### The specificity test
 
-Apply this test to every description you write: could this description apply to 100 other sites, or only to yours? If it could apply to 100 others, it is too generic.
+Apply this test to every piece of content: could this information appear on 100 other sites, or only on yours? Generic content does not get cited. Specific, accurate, detailed content does.
 
-"We help businesses grow" applies to every consulting firm on Earth.
+"We help businesses grow" applies to every consulting firm.
+"We help Shopify stores with 1,000 to 50,000 monthly orders reduce cart abandonment through behavioral email sequences, tested across 2,000 stores over three years" applies to one company.
 
-"We help Shopify stores with 1,000 to 50,000 monthly orders reduce cart abandonment through behavioral email sequences and retargeting" is specific to a narrow domain with clear parameters.
+### Freshness signals
 
-### Internal linking is agent navigation
+LLMs weigh content freshness. A page with `dateModified` from last month ranks higher for freshness signals than one with no date or an old date.
 
-Links inside your content are how agents navigate. `<a href="/docs/api">API documentation</a>` tells an agent there is more relevant content at `/docs/api`. These signals compound in llms.txt (every link is a navigation hint) and in your HTML (every internal link extends the agent's understanding of the site graph).
+Always include `datePublished` and `dateModified` in your Article and WebPage structured data. Update `dateModified` when content changes meaningfully.
 
-Make anchor text descriptive. "Click here" tells an agent nothing. "REST API reference" tells an agent exactly what to expect.
+### Internal linking as agent navigation
 
-### Every image needs a real alt attribute
+Links inside content are how agents navigate your site. Every internal link is a navigation hint. `<a href="/docs/api">REST API reference</a>` tells an agent there is more relevant content at that URL. These signals compound in `llms.txt` (every link is a navigation hint) and in your HTML.
 
-`alt=""` is correct for decorative images. `alt="Chart showing monthly revenue growth from $12k to $89k over 18 months"` is correct for content images. Agents that process images use alt text to understand what the image depicts. Agents that do not process images still need alt text to know what information they are missing.
+Anchor text must be descriptive. "Click here" tells an agent nothing. "REST API reference" is actionable.
+
+### Every image needs real alt text
+
+`alt=""` for decorative images. A meaningful description for content images. Agents that process images use alt text to understand what the image depicts. Agents that do not still need alt text to know what information they are missing.
+
+---
+
+## CI/CD Integration
+
+AEO signals should be verified in your pipeline, not manually checked before launch.
+
+```yaml
+# .github/workflows/aeo-check.yml
+name: AEO Audit
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run AEO audit
+        run: npx ax-audit@latest https://your-staging-url.com --format json > audit.json
+      - name: Check scores
+        run: |
+          node -e "
+            const report = require('./audit.json');
+            const failing = report.results.filter(r => r.score < 80);
+            if (failing.length > 0) {
+              console.error('Checks below 80:', failing.map(r => r.id + ': ' + r.score).join(', '));
+              process.exit(1);
+            }
+          "
+```
+
+Use `--save-baseline` to record a baseline and `--fail-on-regression` to fail the build when any score drops:
+
+```bash
+# Save current scores as baseline
+npx ax-audit@latest https://example.com --save-baseline .ax-baseline.json
+
+# In CI: fail if any check regresses
+npx ax-audit@latest https://example.com --baseline .ax-baseline.json --fail-on-regression
+```
 
 ---
 
@@ -1003,67 +1332,112 @@ Make anchor text descriptive. "Click here" tells an agent nothing. "REST API ref
 
 When starting or working on a web project in AX mode:
 
-1. **Detect stack**: read `package.json`, framework config files, dependencies. Identify Next.js, Astro, or generic static setup.
-2. **Generate mandatory files**: llms.txt, robots.txt, /.well-known/agent.json, /.well-known/security.txt, /.well-known/ai.txt. Use real site content, not placeholders.
-3. **Configure headers**: add security + discovery headers via the correct config for the detected stack. Add CORS on well-known resources.
-4. **Add structured data**: JSON-LD with @graph in the root layout. WebPage + BreadcrumbList on individual page templates.
-5. **Verify HTML rendering**: confirm the stack renders content server-side. Detect empty SPA shells and flag them for fix.
-6. **Write semantic HTML**: use correct landmark elements in every layout and component.
-7. **Complete meta tags**: title template, description, canonical, OG, Twitter on every page type.
-8. **Add sitemap**: cover all public routes, link from robots.txt.
-9. **Keep files current**: when adding routes or features, update llms.txt sections, sitemap, and agent.json skills.
+1. **Detect stack**: read `package.json`, framework config files, dependencies
+2. **Generate mandatory files**: `llms.txt`, `robots.txt`, `/.well-known/agent.json`, `/.well-known/security.txt`, `/.well-known/ai.txt`, `/.well-known/openapi.json` (if API exists), `/.well-known/mcp.json` (if applicable). Use real site content. No placeholders.
+3. **Configure headers**: security headers + Link header + CORS on `/.well-known/*` via the detected stack's config
+4. **Add structured data**: root layout gets WebSite + Organization with sameAs. Every page template gets WebPage + BreadcrumbList. Content pages get Article, FAQPage, or appropriate content type.
+5. **Build the full head**: AI meta tags, rel="alternate", rel="me", OG, Twitter Card, canonical, lang, charset, viewport on every page
+6. **Verify HTML rendering**: confirm server-rendered content. Detect empty SPA shells.
+7. **Write semantic HTML**: correct landmark elements in every layout and component
+8. **Add sitemap**: cover all public routes, link from robots.txt
+9. **Integrate CI**: add ax-audit to the build pipeline
+10. **Keep files current**: when adding routes or features, update `llms.txt` sections, sitemap, and `agent.json` skills
+
+---
+
+## Anti-Patterns
+
+The most common mistakes and the exact fix for each:
+
+| Anti-pattern | Why it fails | Fix |
+| --- | --- | --- |
+| `User-agent: * / Allow: /` only | Agents infer access, no explicit signal, vulnerable to future Disallow collisions | Add explicit entries for all 30+ AI crawlers |
+| `<div id="root"></div>` empty shell | Most AI crawlers don't run JS. Content doesn't exist. | Enable SSR or SSG. Content must be in static HTML. |
+| `llms.txt` description: "We build great software." | Applies to 10 million sites. Provides zero information. | Specific domain + audience + scale + differentiator |
+| `agent.json` with `"skills": []` | Empty skills array gives agents nothing to act on | Add 3-5 specific skills with actionable descriptions |
+| `agent.json` without CORS headers | Browser-based agents get network error. Silently fails. | Add `Access-Control-Allow-Origin: *` on `/.well-known/*` |
+| No AI meta tags | Missing a whole check. Most developers have never heard of `ai:*` tags. | Add all 5: `ai:summary`, `ai:content_type`, `ai:author`, `ai:api`, `ai:agent_card` |
+| No `rel="alternate"` to llms.txt and agent.json in `<head>` | Agents parsing DOM miss discovery files | Add `<link rel="alternate">` for both files |
+| No `rel="me"` links | No identity verification for authorship | Add GitHub, Twitter, LinkedIn rel="me" links |
+| JSON-LD with no `@graph` | Entities are disconnected. No knowledge graph. | Use `@graph` to link all entities by `@id` |
+| No `sameAs` in Organization or Person | Agent cannot ground your entity against pre-existing knowledge | Add Wikipedia, LinkedIn, Twitter, Wikidata to sameAs |
+| No `datePublished` / `dateModified` | Agent cannot assess content freshness | Add to every Article and WebPage entity |
+| `<title>Home</title>` | 4 characters. No topic signal. | Minimum 20 chars: `Product Name: Main Value Proposition` |
+| Description identical to title | ax-audit flags as duplicate. Provides no additional information. | Write a description that extends the title, not repeats it |
+| No `<html lang>` | Language unknown to agents | `<html lang="en">` or correct BCP 47 tag |
+| Relative canonical URL | Ambiguous when fetched out of context | Use absolute URL: `https://example.com/page/` |
+| HTTP 302 redirect to HTTPS | Tells crawlers HTTP version is still valid | Use 301 (permanent) redirect |
+| HSTS without `preload` | Not in browser HSTS preload list | Add `preload` directive, submit at hstspreload.org |
+| `/openapi.json` instead of `/.well-known/openapi.json` | ax-audit checks `/.well-known/openapi.json` specifically | Move the spec to the correct well-known path |
+| `security.txt` with past Expires date | Fails ax-audit. Signals unmaintained site. | Set Expires at least one year in the future, update annually |
+| No FAQPage structured data on support/pricing pages | High-value citation opportunity missed | Add FAQPage with real questions and specific answers |
+| OG image smaller than 1200x630 | Low-quality preview in link embeds | Create 1200x630px image or generate dynamically |
 
 ---
 
 ## Review Checklist
 
-When auditing a web project for AEO compliance:
+When auditing a web project for full AEO compliance:
 
-| Issue | Fix | Check |
+| Check | Pass condition | ax-audit check |
 | --- | --- | --- |
-| `/llms.txt` missing | Create with H1 title, blockquote description, sections, links | llms.txt |
-| `/llms.txt` has no blockquote `>` | Add `> description` after H1 as second non-blank line | llms.txt |
-| `/llms.txt` description is generic | Rewrite with specific domain, scale, and audience details | llms.txt |
-| No explicit AI crawler rules in robots.txt | Add User-agent + Allow for all 8 core crawlers at minimum | robots.txt |
-| Wildcard Disallow blocks AI crawlers | Add explicit Allow per AI crawler above the wildcard rule | robots.txt |
-| No `Sitemap:` in robots.txt | Add `Sitemap: https://example.com/sitemap.xml` | robots.txt |
-| Empty `<div id="root">` in static HTML | Enable SSR or SSG, server-render primary content | HTML Rendering |
-| Fewer than 500 chars visible text | Server-render the page, do not client-render primary content | HTML Rendering |
-| No semantic landmarks | Replace divs with `<main>`, `<article>`, `<header>`, `<nav>`, `<footer>` | HTML Rendering |
-| Multiple `<h1>` tags | Keep one H1 per page, demote others to H2 | HTML Rendering |
-| No JSON-LD structured data | Add `<script type="application/ld+json">` with @graph in `<head>` | Structured Data |
-| JSON-LD is invalid JSON | Fix syntax, validate at validator.schema.org | Structured Data |
-| Only one entity type in JSON-LD | Add WebSite + Organization or Person at minimum | Structured Data |
-| No BreadcrumbList | Add BreadcrumbList to @graph on every non-homepage | Structured Data |
-| Missing `Strict-Transport-Security` | Add HSTS header in server or CDN config | HTTP Headers |
-| Missing `X-Content-Type-Options` | Add `X-Content-Type-Options: nosniff` | HTTP Headers |
-| No Link header for AI discovery | Add Link header pointing to llms.txt and agent.json | HTTP Headers |
-| No CORS on `/.well-known/` | Add `Access-Control-Allow-Origin: *` on well-known routes | HTTP Headers |
-| `/.well-known/agent.json` missing | Create with name, description, url, skills, protocolVersion | agent.json |
-| `agent.json` url field wrong origin | Match url field exactly to the audited site's origin | agent.json |
-| `agent.json` skills array empty | Add skills that describe specific agent-usable capabilities | agent.json |
-| No `og:image` | Create static og-image.png (1200x630) and reference it | Meta Tags |
-| Missing canonical | Add `<link rel="canonical" href="...">` on every page | Meta Tags |
-| Generic page description | Rewrite to be specific to the page's actual content | Meta Tags |
-| `security.txt` missing | Create at `/.well-known/security.txt` with Contact and Expires | security.txt |
-| `security.txt` Expires is past | Update Expires to a future ISO 8601 date | security.txt |
-| HTTP does not redirect to HTTPS | Configure 301 redirect from HTTP to HTTPS | TLS/HTTPS |
-| No HSTS header | Add `Strict-Transport-Security: max-age=31536000` | TLS/HTTPS |
+| `/llms.txt` exists with H1 + blockquote + sections + links | HTTP 200, correct format | llms.txt |
+| Description is specific, not generic | Passes specificity test | llms.txt |
+| `/llms-full.txt` exists | HTTP 200 | llms.txt |
+| All 8 core AI crawlers have explicit robots.txt rules | GPTBot, ClaudeBot, ChatGPT-User, Claude-SearchBot, Google-Extended, PerplexityBot, OAI-SearchBot, CCBot | robots.txt |
+| Sitemap directive in robots.txt | `Sitemap:` line present | robots.txt |
+| Server-rendered content, 500+ chars, 80+ words | Static HTML has real content | html-rendering |
+| 3+ semantic landmarks | main, article, header, footer, nav present | html-rendering |
+| Exactly one H1 per page, non-empty | Single meaningful H1 | html-rendering |
+| JSON-LD with @graph | @context + @graph array | structured-data |
+| 2+ entity types (WebSite, Organization, WebPage...) | Multiple @type values | structured-data |
+| BreadcrumbList on every page | BreadcrumbList in @graph | structured-data |
+| All security headers present | HSTS, X-Content-Type-Options, and 5 more | http-headers |
+| Link header references llms.txt and agent.json | Both rel values in Link header | http-headers |
+| CORS on /.well-known/* | Access-Control-Allow-Origin: * | http-headers |
+| `/.well-known/agent.json` with name, description, url, skills | Required fields present and valid | agent.json |
+| agent.json url matches site origin | URLs share same host | agent.json |
+| CORS on agent.json | Access-Control-Allow-Origin: * | agent.json |
+| `/.well-known/mcp.json` with tools and descriptions | Valid JSON, name, tools with descriptions | mcp |
+| CORS on mcp.json | Access-Control-Allow-Origin: * | mcp |
+| Title 20-70 chars, unique per page | Length within range, not duplicating description | seo-basics |
+| Description 70-160 chars, not duplicating title | Length within range | seo-basics |
+| Single absolute canonical URL | One rel="canonical" with https:// href | seo-basics |
+| `<html lang>` with valid BCP 47 tag | Present and valid | seo-basics |
+| `<meta charset="UTF-8">` | Present as first head element | seo-basics |
+| `<meta name="viewport">` | Present with width= | seo-basics |
+| hreflang with x-default (multilingual sites) | x-default alternate present | seo-basics |
+| 3+ AI meta tags (ai:summary, ai:content_type, ai:author...) | 3 of 5 minimum | meta-tags |
+| rel="alternate" to llms.txt in head | link tag present | meta-tags |
+| rel="alternate" to agent.json in head | link tag present | meta-tags |
+| rel="me" identity links | At least one present | meta-tags |
+| Full OpenGraph tags | og:title, og:description, og:url, og:type + og:image | meta-tags |
+| Twitter Card with summary_large_image | twitter:card, title, description, image | meta-tags |
+| `/.well-known/openapi.json` with version, info, paths | Valid OpenAPI 3.x spec | openapi |
+| HTTPS with 301 redirect from HTTP | Permanent redirect | tls-https |
+| HSTS with preload + includeSubDomains | Full HSTS config | tls-https |
+| Sitemap covers all public URLs | All routes present | sitemap |
+| `/.well-known/ai.txt` present | HTTP 200 | well-known-ai |
+| `/.well-known/security.txt` with future Expires | Required fields, future date | security-txt |
 
 ---
 
 ## Validation
 
-After setup or any significant feature, validate with:
+After setup or any significant change:
 
 ```bash
+# Full audit with terminal output
 npx ax-audit@latest <site-url>
+
+# Machine-readable output for CI
+npx ax-audit@latest <site-url> --format json
+
+# Check only specific areas
+npx ax-audit@latest <site-url> --checks llms-txt,robots-txt,http-headers
+
+# Find checks below threshold
+npx ax-audit@latest <site-url> --format json | jq '.results[] | select(.score < 80) | {id, score}'
 ```
 
-Target: every individual check scores 80 or above. Overall grade A (90+). Any check below 80 is a regression to fix before the work is done.
-
-Run with `--format json` to get machine-readable results for CI integration:
-
-```bash
-npx ax-audit@latest <site-url> --format json | jq '.results[] | select(.score < 80)'
-```
+Target: every check at 80 or above. Overall grade A (90+). Any check below 80 is a regression to fix before the work is complete.
